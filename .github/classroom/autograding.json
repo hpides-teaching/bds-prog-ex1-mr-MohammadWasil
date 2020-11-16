@@ -1,0 +1,65 @@
+{
+  "tests": [
+    {
+      "name": "Word count",
+      "setup": "",
+      "run": "./gradlew test --tests '*wordCount'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Top Word Count",
+      "setup": "",
+      "run": "./gradlew test --tests '*topWord'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Top Trump Words Count",
+      "setup": "",
+      "run": "./gradlew test --tests '*trumpWordCount'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    }
+    {
+      "name": "Top 10 Trump Words",
+      "setup": "",
+      "run": "./gradlew test --tests '*top10TrumpWords'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Trump Hashtags",
+      "setup": "",
+      "run": "./gradlew test --tests '*trumpHashtags'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Top 10 Trump Hashtags",
+      "setup": "",
+      "run": "./gradlew test --tests '*top10TrumpHashtags'",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    }
+
+  ]
+}
