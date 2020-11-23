@@ -17,35 +17,44 @@ public class MapReduceTask {
 
 //    Map function for counting the appearances of each word in the tweet corpus.
     public static class WordExtractorMapper extends Mapper<Object, Text, Text, IntWritable> {
-
+ 	private Text w = new Text();
         @Override
         protected void map(Object key, Text value, Mapper<Object, Text, Text, IntWritable>.Context context)
                 throws IOException, InterruptedException {
-        	
+
         	HashMap<String, String> parsedCsv = TweetParsingUtils.getAuthorAndTweetFromCSV(value.toString());
         	String author = parsedCsv.getOrDefault("author", "");
         	String tweet = parsedCsv.getOrDefault("tweet", "");
         	
 			if(!tweet.equals("")) {
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
-				/*
-				 * Your implementation of the mapper of the word count
-				 */
+   			        
+				for(int i =0; i <= words.length ; i++){
+				    //System.out.println(words[i]+ " 1");
+				    w.set(words[i]);
+				    //Context.write(w, new IntWritable(1));
+				}
 			}
-			context.write(new Text("missing implementation!"), new IntWritable(1));
+			context.write(w, new IntWritable(1));
         }
     };
 
 //  Reduce function for aggregating the number of appearances of each word in the tweet corpus.
     public static class WordCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    private IntWritable result = new IntWritable();
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values,
                               Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
         	
-        	/*
-			 * Your implementation of the reducer of the word count goes here.
-			 */
-        	context.write(new Text("missing implementation!"), new IntWritable(1));
+        	int sum = 0;
+        	for (IntWritable value : values){
+        		sum = sum + value.get();
+        	}
+       	
+
+		result.set(sum);
+        	
+        	context.write(key, result);
         }
     }
 
@@ -107,15 +116,15 @@ public class MapReduceTask {
 
         String inputWordCount = args[0];
         String outputWordCount = args[1];
-        String outputTop1Word = args[2];
-        String outputTop10TrumpWords = args[3];
-        String outputTop10TrumpHashtags = args[4];
+        //String outputTop1Word = args[2];
+        //String outputTop10TrumpWords = args[3];
+        //String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
-        mrt.topWord(inputWordCount, outputTop1Word);
-        mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
-        mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
+        //mrt.topWord(inputWordCount, outputTop1Word);
+        //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
+        //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
 }
