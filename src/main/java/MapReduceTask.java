@@ -47,13 +47,7 @@ public class MapReduceTask {
         protected void reduce(Text key, Iterable<IntWritable> values,
                               Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
 
-        	//int sum = 0;
-        	//for (IntWritable value_ : values){
-        	//	sum += value_.get();
-        	//}
-		//count.set(sum);
-        	//context.write(key, count);
-
+        	
         	Iterator<IntWritable> iter = values.iterator();
         	int sum=0;
         	while(iter.hasNext()){
