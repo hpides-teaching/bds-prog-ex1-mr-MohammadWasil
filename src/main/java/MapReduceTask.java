@@ -32,17 +32,10 @@ public class MapReduceTask {
 				for(int i =0; i <= words.length ; i++){
 				    //System.out.println(words[i]+ " 1");
 				    w.set(words[i]);
-<<<<<<< HEAD
 				    context.write(w, new IntWritable(1));
 				}
 			}
 			//context.write(w, new IntWritable(1));
-=======
-				    //Context.write(w, new IntWritable(1));
-				}
-			}
-			context.write(w, new IntWritable(1));
->>>>>>> a9a2f29536e2d36fe0554b69697b014c9e719dfd
         }
     };
 
@@ -58,10 +51,6 @@ public class MapReduceTask {
         		sum = sum + value.get();
         	}
        	
-<<<<<<< HEAD
-=======
-
->>>>>>> a9a2f29536e2d36fe0554b69697b014c9e719dfd
 		result.set(sum);
         	
         	context.write(key, result);
@@ -126,15 +115,15 @@ public class MapReduceTask {
 
         String inputWordCount = args[0];
         String outputWordCount = args[1];
-        //String outputTop1Word = args[2];
-        //String outputTop10TrumpWords = args[3];
-        //String outputTop10TrumpHashtags = args[4];
+        String outputTop1Word = args[2];
+        String outputTop10TrumpWords = args[3];
+        String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
-        //mrt.topWord(inputWordCount, outputTop1Word);
-        //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
-        //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
+        mrt.topWord(inputWordCount, outputTop1Word);
+        mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
+        mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
 }
