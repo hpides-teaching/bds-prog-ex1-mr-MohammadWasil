@@ -122,15 +122,15 @@ public class MapReduceTask {
 
         String inputWordCount = args[0];
         String outputWordCount = args[1];
-        //String outputTop1Word = args[2];
-        //String outputTop10TrumpWords = args[3];
-        //String outputTop10TrumpHashtags = args[4];
+        String outputTop1Word = args[2];
+        String outputTop10TrumpWords = args[3];
+        String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
-        //mrt.topWord(inputWordCount, outputTop1Word);
-        //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
-        //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
+        mrt.topWord(inputWordCount, outputTop1Word);
+        mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
+        mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
 }
