@@ -12,12 +12,13 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class MapReduceTask {
 
 //    Map function for counting the appearances of each word in the tweet corpus.
     public static class WordExtractorMapper extends Mapper<Object, Text, Text, IntWritable> {
- 	private Text w = new Text();
+ 	
         @Override
         protected void map(Object key, Text value, Mapper<Object, Text, Text, IntWritable>.Context context)
                 throws IOException, InterruptedException {
@@ -29,35 +30,40 @@ public class MapReduceTask {
 			if(!tweet.equals("")) {
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
    			        
-				for(int i =0; i <= words.length ; i++){
-				    //System.out.println(words[i]+ " 1");
-				    w.set(words[i]);
-				    //Context.write(w, new IntWritable(1));
-				}
+   			        for( int i = 0; i < words.length ; i++ )
+   			        {
+   			        	context.write(new Text(words[i]), new IntWritable(1) );
+   			        }
+   			        
 			}
-			context.write(w, new IntWritable(1));
+			//context.write(w, new IntWritable(1));
         }
     };
 
 //  Reduce function for aggregating the number of appearances of each word in the tweet corpus.
     public static class WordCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
-    private IntWritable result = new IntWritable();
+    private IntWritable count = new IntWritable();
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values,
                               Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
-        	
-        	int sum = 0;
-        	for (IntWritable value : values){
-        		sum = sum + value.get();
-        	}
-       	
 
-		result.set(sum);
-        	
-        	context.write(key, result);
+        	//int sum = 0;
+        	//for (IntWritable value_ : values){
+        	//	sum += value_.get();
+        	//}
+		//count.set(sum);
+        	//context.write(key, count);
+
+        	Iterator<IntWritable> iter = values.iterator();
+        	int sum=0;
+        	while(iter.hasNext()){
+        		IntWritable value_ = iter.next();
+        		sum += value_.get();
+        	}
+        	count.set(sum);
+        	context.write(key, count);
         }
     }
-
 
     /*
      *
