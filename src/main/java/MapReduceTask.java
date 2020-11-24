@@ -17,7 +17,7 @@ public class MapReduceTask {
 
 //    Map function for counting the appearances of each word in the tweet corpus.
     public static class WordExtractorMapper extends Mapper<Object, Text, Text, IntWritable> {
- 	private Text w = new Text();
+ 	// private Text w = new Text();
         @Override
         protected void map(Object key, Text value, Mapper<Object, Text, Text, IntWritable>.Context context)
                 throws IOException, InterruptedException {
@@ -29,11 +29,18 @@ public class MapReduceTask {
 			if(!tweet.equals("")) {
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
    			        
-				for(int i =0; i <= words.length ; i++){
+   			        int i =0;
+   			        while(i < words.length)
+   			        {
+   			        	context.write(new Text(words[i]), new IntWritable(1) );
+   			        	i++;
+   			        }
+   			        
+				//for(int i =0; i <= words.length ; i++){
 				    //System.out.println(words[i]+ " 1");
-				    w.set(words[i]);
-				    context.write(w, new IntWritable(1));
-				}
+				//    w.set(words[i]);
+				//    context.write(w, new IntWritable(1));
+				//}
 			}
 			//context.write(w, new IntWritable(1));
         }
@@ -115,15 +122,15 @@ public class MapReduceTask {
 
         String inputWordCount = args[0];
         String outputWordCount = args[1];
-        String outputTop1Word = args[2];
-        String outputTop10TrumpWords = args[3];
-        String outputTop10TrumpHashtags = args[4];
+        //String outputTop1Word = args[2];
+        //String outputTop10TrumpWords = args[3];
+        //String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
-        mrt.topWord(inputWordCount, outputTop1Word);
-        mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
-        mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
+        //mrt.topWord(inputWordCount, outputTop1Word);
+        //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
+        //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
 }
