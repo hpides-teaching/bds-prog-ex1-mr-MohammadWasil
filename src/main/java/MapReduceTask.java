@@ -12,9 +12,14 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
+// import statement I added.
 import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Collection;
+import java.util.*;
 
 public class MapReduceTask {
+
 
 //    Map function for counting the appearances of each word in the tweet corpus.
     public static class WordExtractorMapper extends Mapper<Object, Text, Text, IntWritable> {
@@ -66,6 +71,86 @@ public class MapReduceTask {
      * are available in TweetParsingUtils.java
      *
      * */
+     
+     
+//    Map function for counting top words.
+    //    Map function for counting the appearances of each word in the tweet corpus.
+    public static class TopWordMapper extends Mapper<Object, Text, Text, IntWritable> {
+ 	
+        @Override
+        protected void map(Object key, Text value, Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+
+        	HashMap<String, String> parsedCsv = TweetParsingUtils.getAuthorAndTweetFromCSV(value.toString());
+        	String author = parsedCsv.getOrDefault("author", "");
+        	String tweet = parsedCsv.getOrDefault("tweet", "");
+	
+    			if(!tweet.equals("")) {
+				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
+
+   				//Map<String, Integer> wordHashMap = new HashMap<String, Integer>();
+   				
+   				for (int i=0; i< words.length; i++)
+   				{
+   					context.write(new Text(words[i]), new IntWritable(1) );
+   			        }
+   			        
+			}
+			//context.write(w, new IntWritable(1));
+    		}    
+    }
+    
+//  Reduce function for aggregating the top words in the tweet corpus.
+    public static class TopWordReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    
+	private Map<String,Integer> wordHashMap = new HashMap<String, Integer>();
+    
+        @Override
+        protected void reduce(Text key, Iterable<IntWritable> values,
+                              Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
+
+		
+		// Calculate the count of the words.
+		Iterator<IntWritable> iter = values.iterator();
+		int sum=0;
+		while(iter.hasNext())
+		{
+			IntWritable value_ = iter.next();
+			sum += value_.get();	
+		}
+		
+		// Store the word-count pair of each words into hashmap
+		if( wordHashMap.containsKey(key))
+		{
+			wordHashMap.put(key.toString(), sum);
+		}
+		else
+		{
+			wordHashMap.putIfAbsent(key.toString(), sum);		
+		}
+		     
+        }
+        
+        
+	protected void cleanup(Context context) throws IOException, InterruptedException{
+		// Here, we will take the maximum value from the hashmap, and use this value to
+		// compare and get their corresponding key.
+		
+		// Get the maximum value from the hashmap
+		Collection<Integer> value_ = wordHashMap.values();
+        	int maxValue_ = Collections.max(value_);
+        	
+        	// Iterate through the hashmap
+        	for (Map.Entry<String, Integer> e : wordHashMap.entrySet() )
+        	{
+        		if(e.getValue() == maxValue_)
+        		{
+				// write the word and their count.
+        			context.write(new Text(e.getKey()), new IntWritable(e.getValue() ));
+        		}
+		}
+	}
+    }
 
 
 
@@ -95,6 +180,22 @@ public class MapReduceTask {
      * the path to the csv file containing the tweets and the path to the output file where it must write
      * the number of occurrences of the most used word in the tweets. */
     public void topWord(String inputWordCount, String outputTop1Word) throws InterruptedException, IOException, ClassNotFoundException {
+    	Configuration conf2 = new Configuration();
+    	Job tw = Job.getInstance(conf2, "top-word");
+    	
+    	tw.setJarByClass(MapReduceTask.class);
+    	tw.setMapperClass(TopWordMapper.class);
+    	tw.setReducerClass(TopWordReducer.class);
+    	
+    	tw.setOutputKeyClass(Text.class);
+    	tw.setOutputValueClass(IntWritable.class);
+    	
+    	FileInputFormat.addInputPath(tw, new Path(inputWordCount));
+    	FileOutputFormat.setOutputPath(tw, new Path(outputTop1Word));
+    	
+    	tw.setInputFormatClass(TextInputFormat.class);
+	tw.setOutputFormatClass(TextOutputFormat.class);
+	tw.waitForCompletion(true);
 
     }
 
@@ -116,14 +217,14 @@ public class MapReduceTask {
 
         String inputWordCount = args[0];
         String outputWordCount = args[1];
-        //String outputTop1Word = args[2];
+        String outputTop1Word = args[2];
         //String outputTop10TrumpWords = args[3];
         //String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
-        //mrt.topWord(inputWordCount, outputTop1Word);
+        mrt.topWord(inputWordCount, outputTop1Word);
         //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
         //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
