@@ -74,7 +74,6 @@ public class MapReduceTask {
      
      
 //    Map function for counting top words.
-    //    Map function for counting the appearances of each word in the tweet corpus.
     public static class TopWordMapper extends Mapper<Object, Text, Text, IntWritable> {
  	
         @Override
@@ -87,8 +86,6 @@ public class MapReduceTask {
 	
     			if(!tweet.equals("")) {
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
-
-   				//Map<String, Integer> wordHashMap = new HashMap<String, Integer>();
    				
    				for (int i=0; i< words.length; i++)
    				{
@@ -96,7 +93,7 @@ public class MapReduceTask {
    			        }
    			        
 			}
-			//context.write(w, new IntWritable(1));
+			
     		}    
     }
     
