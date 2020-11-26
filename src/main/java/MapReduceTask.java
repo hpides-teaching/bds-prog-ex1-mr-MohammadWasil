@@ -206,26 +206,56 @@ public class MapReduceTask {
 		}
 		//context.write(w, new IntWritable(1));
         }
+        
     }
 
     //  Reduce function for aggregating the number of top 10 words used by Mr. Donald Trump.
     public static class TrumpWordsReduce extends Reducer<Text, IntWritable, Text, IntWritable> {
     private IntWritable count = new IntWritable();
+    private Map<String,Integer> wordHashMap = new HashMap<String, Integer>();
+    
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values,
                               Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
-
-        	
-        	Iterator<IntWritable> iter = values.iterator();
-        	int sum=0;
-        	while(iter.hasNext()){
-        		IntWritable value_ = iter.next();
-        		sum += value_.get();
-        	}
-        	count.set(sum);
-        	context.write(key, count);
-        	
+	
+        	// Calculate the count of the words.
+		Iterator<IntWritable> iter = values.iterator();
+		int sum=0;
+		while(iter.hasNext())
+		{
+			IntWritable value_ = iter.next();
+			sum += value_.get();	
+		}
+		
+		// Store the word-count pair of each words into hashmap
+		if( wordHashMap.containsKey(key))
+		{
+			wordHashMap.put(key.toString(), sum);
+		}
+		else
+		{
+			wordHashMap.putIfAbsent(key.toString(), sum);		
+		}
         }
+        
+        protected void cleanup(Context context) throws IOException, InterruptedException{
+		// Here, we will take the top 10 values from the hashmap, and use this value to
+		// compare and get their corresponding key.
+		
+		// Get the maximum value from the hashmap
+		Collection<Integer> value_ = wordHashMap.values();
+        	int maxValue_ = Collections.max(value_);
+        	
+        	// Iterate through the hashmap
+        	for (Map.Entry<String, Integer> e : wordHashMap.entrySet() )
+        	{
+        		if(e.getValue() == maxValue_)
+        		{
+				// write the word and their count.
+        			context.write(new Text(e.getKey()), new IntWritable(e.getValue() ));
+        		}
+		}
+	}
     }
 
 
