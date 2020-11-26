@@ -37,12 +37,29 @@ public class MapReduceTask {
    			        
    			        for( int i = 0; i < words.length ; i++ )
    			        {
-   			        	context.write(new Text(words[i]), new IntWritable(1) );
+					   			        
+   				        // To check if the key is not present in the array forbidden words.
+					if(!checkElement(words[i]))
+					{
+						context.write(new Text(words[i]), new IntWritable(1) );
+					}
    			        }
-   			        
 			}
 			//context.write(w, new IntWritable(1));
         }
+        
+        protected static boolean checkElement(String keys)
+    	{
+		for(String word : TweetParsingUtils.forbiddenWords)
+		{
+		    if(word.equals(keys))
+		    {
+		        return true;
+		    }
+		}
+		return false;
+    	}
+        
     };
 
 //  Reduce function for aggregating the number of appearances of each word in the tweet corpus.
@@ -72,7 +89,6 @@ public class MapReduceTask {
      *
      * */
      
-     
 //    Map function for counting top words.
     public static class TopWordMapper extends Mapper<Object, Text, Text, IntWritable> {
  	
@@ -84,17 +100,32 @@ public class MapReduceTask {
         	String author = parsedCsv.getOrDefault("author", "");
         	String tweet = parsedCsv.getOrDefault("tweet", "");
 	
-    			if(!tweet.equals("")) {
-				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
-   				
-   				for (int i=0; i< words.length; i++)
-   				{
-   					context.write(new Text(words[i]), new IntWritable(1) );
-   			        }
-   			        
-			}
+		if(!tweet.equals("")) {
 			
-    		}    
+			String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
+			
+			for (int i=0; i< words.length; i++)
+			{
+				// To check if the key is not present in the array forbidden words.
+				if(!checkElement(words[i]))
+				{
+					context.write(new Text(words[i]), new IntWritable(1) );
+				}
+			}
+		}
+	}    
+	
+	protected static boolean checkElement(String keys)
+    	{
+		for(String word : TweetParsingUtils.forbiddenWords)
+		{
+		    if(word.equals(keys))
+		    {
+		        return true;
+		    }
+		}
+		return false;
+    	}
     }
     
 //  Reduce function for aggregating the top words in the tweet corpus.
@@ -147,6 +178,54 @@ public class MapReduceTask {
         		}
 		}
 	}
+    }
+    
+    //    Map function for counting the top 10 words used by Mr. Donald Trump.
+   public static class TrumpWordsMapper extends Mapper<Object, Text, Text, IntWritable> {
+
+	private String authorDonald = "realDonaldTrump"; 	
+        @Override
+        protected void map(Object key, Text value, Mapper<Object, Text, Text, IntWritable>.Context context)
+                throws IOException, InterruptedException {
+
+        	HashMap<String, String> parsedCsv = TweetParsingUtils.getAuthorAndTweetFromCSV(value.toString());
+        	String author = parsedCsv.getOrDefault("author", "");
+        	String tweet = parsedCsv.getOrDefault("tweet", "");
+        	
+		if(!tweet.equals("")) {
+			// change here.
+			if(author.equals(authorDonald) ){
+			
+				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
+   			        
+   			        for( int i = 0; i < words.length ; i++ )
+   			        {
+   			        	context.write(new Text(words[i]), new IntWritable(1) );
+   			        }
+			}				
+		}
+		//context.write(w, new IntWritable(1));
+        }
+    }
+
+    //  Reduce function for aggregating the number of top 10 words used by Mr. Donald Trump.
+    public static class TrumpWordsReduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+    private IntWritable count = new IntWritable();
+        @Override
+        protected void reduce(Text key, Iterable<IntWritable> values,
+                              Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
+
+        	
+        	Iterator<IntWritable> iter = values.iterator();
+        	int sum=0;
+        	while(iter.hasNext()){
+        		IntWritable value_ = iter.next();
+        		sum += value_.get();
+        	}
+        	count.set(sum);
+        	context.write(key, count);
+        	
+        }
     }
 
 
@@ -201,6 +280,22 @@ public class MapReduceTask {
      * the number of occurrences for each of the 10 most used words by Donald Trump. */
     public void top10TrumpWords(String inputWordCount, String outputTop10TrumpWords) throws IOException, ClassNotFoundException, InterruptedException {
 
+	Configuration conf3 = new Configuration();
+    	Job trumpWord = Job.getInstance(conf3, "trump-word");
+    	
+    	trumpWord.setJarByClass(MapReduceTask.class);
+    	trumpWord.setMapperClass(TrumpWordsMapper.class);
+    	trumpWord.setReducerClass(TrumpWordsReduce.class);
+    	
+    	trumpWord.setOutputKeyClass(Text.class);
+    	trumpWord.setOutputValueClass(IntWritable.class);
+    	
+    	FileInputFormat.addInputPath(trumpWord, new Path(inputWordCount));
+    	FileOutputFormat.setOutputPath(trumpWord, new Path(outputTop10TrumpWords));
+    	
+    	trumpWord.setInputFormatClass(TextInputFormat.class);
+	trumpWord.setOutputFormatClass(TextOutputFormat.class);
+	trumpWord.waitForCompletion(true);
     }
 
     /* Method for setting up and executing the Donald Trump's top 10 hashtags Hadoop job. This method receives as parameters
@@ -215,14 +310,14 @@ public class MapReduceTask {
         String inputWordCount = args[0];
         String outputWordCount = args[1];
         String outputTop1Word = args[2];
-        //String outputTop10TrumpWords = args[3];
+        String outputTop10TrumpWords = args[3];
         //String outputTop10TrumpHashtags = args[4];
 
         MapReduceTask mrt = new MapReduceTask();
 
         mrt.wordCount(inputWordCount, outputWordCount);
         mrt.topWord(inputWordCount, outputTop1Word);
-        //mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
+        mrt.top10TrumpWords(inputWordCount, outputTop10TrumpWords);
         //mrt.top10TrumpHashtags(inputWordCount, outputTop10TrumpHashtags);
     }
 }
