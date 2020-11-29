@@ -45,7 +45,6 @@ public class MapReduceTask {
 					}
    			        }
 			}
-			//context.write(w, new IntWritable(1));
         }
         
         protected static boolean checkElement(String keys)
@@ -59,11 +58,11 @@ public class MapReduceTask {
 		}
 		return false;
     	}
-        
     };
 
 //  Reduce function for aggregating the number of appearances of each word in the tweet corpus.
     public static class WordCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+    
     private IntWritable count = new IntWritable();
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values,
@@ -132,7 +131,8 @@ public class MapReduceTask {
     public static class TopWordReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
     
 	private Map<String,Integer> wordHashMap = new HashMap<String, Integer>();
-    
+    	//private int tempSum = 0;
+    	//private String tempKey = "";
         @Override
         protected void reduce(Text key, Iterable<IntWritable> values,
                               Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
@@ -147,6 +147,13 @@ public class MapReduceTask {
 			sum += value_.get();	
 		}
 		
+		// Check whether the previous value is smaller than the current value
+		/*if(tempSum < sum)
+		{
+			tempSum = sum;
+			tempKey = key.toString();
+		}*/
+		
 		// Store the word-count pair of each words into hashmap
 		if( wordHashMap.containsKey(key))
 		{
@@ -155,10 +162,8 @@ public class MapReduceTask {
 		else
 		{
 			wordHashMap.putIfAbsent(key.toString(), sum);		
-		}
-		     
+		}	     
         }
-        
         
 	protected void cleanup(Context context) throws IOException, InterruptedException{
 		// Here, we will take the maximum value from the hashmap, and use this value to
@@ -177,6 +182,8 @@ public class MapReduceTask {
         			context.write(new Text(e.getKey()), new IntWritable(e.getValue() ));
         		}
 		}
+		
+		//context.write(new Text(tempKey), new IntWritable(tempSum));
 	}
     }
     
@@ -193,7 +200,7 @@ public class MapReduceTask {
         	String tweet = parsedCsv.getOrDefault("tweet", "");
         	
 		if(!tweet.equals("")) {
-			// change here.
+			// To check if the tweets are from Donald Trump
 			if(author.equals(authorDonald) ){
 			
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
@@ -242,9 +249,7 @@ public class MapReduceTask {
 			IntWritable value_ = iter.next();
 			sum += value_.get();
 		}	
-		//count.set(sum);
-		//context.write(key, new Text(Integer.toString(sum)));
-
+		
  	     	// Store the word-count pair of each words into hashmap
 		if( wordHashMap.containsKey(key))
 		{
@@ -273,7 +278,6 @@ public class MapReduceTask {
 		    if(entry.getValue() == maxValue_){
 		        
 		        context.write(new Text(entry.getKey()), new IntWritable(entry.getValue()));
-		        //System.out.println(entry.getKey() + " " + entry.getValue());
 		        iter.remove();
 		        
 		        iter = wordHashMap.entrySet().iterator();
@@ -390,17 +394,16 @@ public class MapReduceTask {
         	String tweet = parsedCsv.getOrDefault("tweet", "");
         	
 		if(!tweet.equals("")) {
-			// change here.
+			// To check if the tweets are from Mr. DOnald Trump.
 			if(author.equals(authorDonald)){
 			
 				String [] words = TweetParsingUtils.breakTweetIntoWords(tweet);
    			        
    			        for( int i = 0; i < words.length ; i++ )
    			        {
-   			        	 // To check if the key is not present in the array forbidden words, and that word starts with "#"
+   			        	 // To check if the key is not present in the array forbidden words, and, it is a hashtag, i.e the word starts with "#"
 					if(!checkElement(words[i]) && words[i].startsWith("#"))
 					{
-	   			        	//context.write(new Text(words[i]), new IntWritable(1) );
 	   			        	context.write(  new Text(words[i]), new IntWritable(1) );
    			        	}
    			        }
@@ -438,8 +441,6 @@ public class MapReduceTask {
 			IntWritable value_ = iter.next();
 			sum += value_.get();
 		}	
-		//count.set(sum);
-		//context.write(key, new Text(Integer.toString(sum)));
 
  	     	// Store the word-count pair of each words into hashmap
 		if( wordHashMap.containsKey(key))
@@ -469,7 +470,6 @@ public class MapReduceTask {
 		    if(entry.getValue() == maxValue_){
 		        
 		        context.write(new Text(entry.getKey()), new IntWritable(entry.getValue()));
-		        //System.out.println(entry.getKey() + " " + entry.getValue());
 		        iter.remove();
 		        
 		        iter = wordHashMap.entrySet().iterator();
@@ -485,10 +485,7 @@ public class MapReduceTask {
         	}
 	}
     }
-    
-    
-    
-    
+
     /* Method for setting up and executing the word count Hadoop job. This method receives as parameters
      * the path to the csv file containing the tweets and the path to the output file where it must write
      * the number of occurrences of each word in the tweets. */
